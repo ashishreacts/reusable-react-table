@@ -27,7 +27,7 @@ type TableProps = {
   searchLabel: string;
 };
 
-const columns = [
+const col = [
   { id: "name", label: "Name" },
   { id: "email", label: "Email" },
   { id: "gender", label: "Gender" },
@@ -41,8 +41,8 @@ const rows = [
   { name: "Ashish", email: "aj@gmail.com", gender: "Male", status: "active" },
 ];
 const Table: FC<TableProps> = (props: TableProps) => {
-  const { headerComponent } = props;
-
+  const { headerComponent,columns } = props;
+  const memoizedColumns = useMemo(() => columns, [columns]);
   const memoisedHeaderComponent = useMemo(
     () => headerComponent,
     [headerComponent]
@@ -66,15 +66,15 @@ const Table: FC<TableProps> = (props: TableProps) => {
       <MUITable>
         <TableHead>
           <TableRow>
-            {columns.map((column) => (
-              <TableCell key={column.id}>{column.label}</TableCell>
+            {memoizedColumns.map((column) => (
+              <TableCell key={column.id}>{column.header}</TableCell>
             ))}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.map((row, index) => (
             <TableRow key={index}>
-              {columns.map((column) => (
+              {col.map((column) => (
                 <TableCell key={column.id}>{row[column.id]}</TableCell>
               ))}
             </TableRow>
