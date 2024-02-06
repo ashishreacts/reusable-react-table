@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Grid,
   Table as MUITable,
@@ -12,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { ColumnDef } from "@tanstack/react-table";
-import { Dispatch, FC, SetStateAction } from "react";
+import { Dispatch, FC, SetStateAction, useMemo } from "react";
 
 type TableProps = {
   data: Api.Users.Data[];
@@ -40,18 +41,17 @@ const rows = [
   { name: "Ashish", email: "aj@gmail.com", gender: "Male", status: "active" },
 ];
 const Table: FC<TableProps> = (props: TableProps) => {
+  const { headerComponent } = props;
+
+  const memoisedHeaderComponent = useMemo(
+    () => headerComponent,
+    [headerComponent]
+  );
   return (
     <TableContainer component={Paper}>
-      <Grid container spacing={2} sx={{ p: 1 }}>
-        <Grid item xs={10}>
-          <Typography component="h1" variant="h4">
-            User Table
-          </Typography>
-        </Grid>
-        <Grid item xs={2} >
-          <Button>Action Button</Button>
-        </Grid>
-      </Grid>
+      <Box padding="1rem">
+        {memoisedHeaderComponent && <Box>{memoisedHeaderComponent}</Box>}
+      </Box>
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <TextField
