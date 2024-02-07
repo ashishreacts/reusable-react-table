@@ -12,8 +12,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ColumnDef, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { Dispatch, FC, SetStateAction, useMemo } from "react";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { debounce } from "lodash";
+import { ChangeEvent, Dispatch, FC, SetStateAction, useMemo } from "react";
 
 type TableProps = {
   data: Api.Users.Data[];
@@ -23,25 +29,18 @@ type TableProps = {
   onClickRow: (cell: any, row: any) => void;
   pageCount: number;
   page: Dispatch<SetStateAction<number | undefined>>;
-  search: Dispatch<SetStateAction<string | undefined>>;
-  searchLabel: string;
+  search?: Dispatch<SetStateAction<string | undefined>>;
+  searchLabel?: string;
 };
 
-const col = [
-  { id: "name", label: "Name" },
-  { id: "email", label: "Email" },
-  { id: "gender", label: "Gender" },
-  { id: "status", label: "Status" },
-];
-
-const rows = [
-  { name: "Ashish", email: "aj@gmail.com", gender: "Male", status: "active" },
-  { name: "Ashish", email: "aj@gmail.com", gender: "Male", status: "active" },
-  { name: "Ashish", email: "aj@gmail.com", gender: "Male", status: "active" },
-  { name: "Ashish", email: "aj@gmail.com", gender: "Male", status: "active" },
-];
 const Table: FC<TableProps> = (props: TableProps) => {
-  const { headerComponent, columns, data } = props;
+  const {
+    headerComponent,
+    columns,
+    data,
+    search,
+    searchLabel = "Search",
+  } = props;
   const memoizedData = useMemo(() => data, [data]);
   const memoizedColumns = useMemo(() => columns, [columns]);
   const memoisedHeaderComponent = useMemo(
@@ -49,11 +48,17 @@ const Table: FC<TableProps> = (props: TableProps) => {
     [headerComponent]
   );
 
-  const { getHeaderGroups, getRowModel, getAllColumns } = useReactTable({
+  const { getRowModel } = useReactTable({
     data: memoizedData,
     columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  const handleSearchChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    search && search(e.target.value);
+  };
   return (
     <TableContainer component={Paper}>
       <Box padding="1rem">
@@ -61,13 +66,15 @@ const Table: FC<TableProps> = (props: TableProps) => {
       </Box>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <TextField
-            type="search"
-            size="small"
-            placeholder="search by name"
-            variant="standard"
-            sx={{ p: 2 }}
-          />
+          {search && (
+            <TextField
+              onChange={debounce(handleSearchChange, 1000)}
+              size="small"
+              label={searchLabel}
+              margin="normal"
+              variant="standard"
+            />
+          )}
         </Grid>
       </Grid>
       <MUITable>
@@ -79,10 +86,12 @@ const Table: FC<TableProps> = (props: TableProps) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {getRowModel().rows.map((row, index) => (
-            <TableRow key={index}>
-              {col.map((column) => (
-                <TableCell key={column.id}>{row[column.id]}</TableCell>
+          {getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
               ))}
             </TableRow>
           ))}
