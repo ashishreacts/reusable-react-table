@@ -4,6 +4,7 @@ import {
   Grid,
   Table as MUITable,
   Paper,
+  Skeleton,
   TableBody,
   TableCell,
   TableContainer,
@@ -39,6 +40,8 @@ type TableProps = {
   page?: Dispatch<SetStateAction<number | undefined>>;
   search?: Dispatch<SetStateAction<string | undefined>>;
   searchLabel?: string;
+  skeletonCount?: number;
+  skeletonHeight?:number;
 };
 
 const Table: FC<TableProps> = (props: TableProps) => {
@@ -51,6 +54,9 @@ const Table: FC<TableProps> = (props: TableProps) => {
     pageCount,
     page,
     onClickRow,
+    skeletonCount,
+    skeletonHeight,
+    isFetching,
   } = props;
   const [paginationPage, setPaginationPage] = useState(1);
 
@@ -61,13 +67,16 @@ const Table: FC<TableProps> = (props: TableProps) => {
     [headerComponent]
   );
 
-  const { getRowModel } = useReactTable({
+  const { getRowModel, getAllColumns } = useReactTable({
     data: memoizedData,
     columns: memoizedColumns,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     pageCount,
   });
+
+  const skeletons = Array.from({ length: skeletonCount }, (x, i) => i);
+  const columnCount = getAllColumns().length;
 
   const handleSearch = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -109,18 +118,34 @@ const Table: FC<TableProps> = (props: TableProps) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  onClick={() => onClickRow?.(cell, row)}
-                  key={cell.id}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
+          {!isFetching ? (
+            getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    onClick={() => onClickRow?.(cell, row)}
+                    key={cell.id}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <>
+            {skeletons.map((skeleton) => (
+              <TableRow key={skeleton}>
+                {Array.from({ length: columnCount }, (x, i) => i).map(
+                  (elm) => (
+                    <TableCell key={elm}>
+                      <Skeleton height={skeletonHeight} />
+                    </TableCell>
+                  )
+                )}
+              </TableRow>
+            ))}
+          </>
+          )}
         </TableBody>
       </MUITable>
       {pageCount && page && (
