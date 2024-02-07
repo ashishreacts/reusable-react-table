@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Dispatch, FC, SetStateAction, useMemo } from "react";
 
 type TableProps = {
@@ -41,12 +41,19 @@ const rows = [
   { name: "Ashish", email: "aj@gmail.com", gender: "Male", status: "active" },
 ];
 const Table: FC<TableProps> = (props: TableProps) => {
-  const { headerComponent,columns } = props;
+  const { headerComponent, columns, data } = props;
+  const memoizedData = useMemo(() => data, [data]);
   const memoizedColumns = useMemo(() => columns, [columns]);
   const memoisedHeaderComponent = useMemo(
     () => headerComponent,
     [headerComponent]
   );
+
+  const { getHeaderGroups, getRowModel, getAllColumns } = useReactTable({
+    data: memoizedData,
+    columns: memoizedColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
   return (
     <TableContainer component={Paper}>
       <Box padding="1rem">
@@ -72,7 +79,7 @@ const Table: FC<TableProps> = (props: TableProps) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row, index) => (
+          {getRowModel().rows.map((row, index) => (
             <TableRow key={index}>
               {col.map((column) => (
                 <TableCell key={column.id}>{row[column.id]}</TableCell>
